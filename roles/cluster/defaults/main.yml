@@ -3,3 +3,8 @@ core_instance_type: m7a.xlarge
 core_volume_size: 100 # in GB
 video_instance_type: c7a.xlarge
 thumb_instance_type: "{{ video_instance_type }}"
+edgeconnect_instance_type: c7a.xlarge
+edgeconnect_count: 0
+aws_tags:
+  application: connectit
+  managed-by: ansible

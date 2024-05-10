@@ -118,3 +118,18 @@
     image_id: ami-0705384c0b33c194c # ubuntu 24.04
     exact_count: 1
     tags: "{{ aws_tags | combine({ 'role': 'thumb' }) }}"
+
+- name: start edge connect instances
+  amazon.aws.ec2_instance:
+    name: "edge-connect"
+    region: "{{ region }}"
+    key_name: "connectit-{{ lookup('env', 'USER') }}"
+    vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
+    instance_type: "{{ edgeconnect_instance_type }}"
+    security_group: connectit_sg
+    network:
+      assign_public_ip: true
+    image_id: ami-0705384c0b33c194c # ubuntu 24.04
+    exact_count: "{{ edgeconnect_count }}"
+    tags: "{{ aws_tags | combine({ 'role': 'edgeconnect' }) }}"
+  when: edgeconnect_count  > 0

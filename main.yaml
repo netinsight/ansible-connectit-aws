@@ -35,3 +35,13 @@
       become: yes
   vars_files:
     - config.yml
+
+- name: Setup Edge Connects
+  hosts: role_edgeconnect
+  vars:
+    ansible_user: ubuntu
+  roles:
+    - role: edgeconnect
+      become: yes
+  vars_files:
+    - config.yml

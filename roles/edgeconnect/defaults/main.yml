@@ -1,0 +1,1 @@
+edgeconnect_name: "{{ ansible_host }}"

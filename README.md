@@ -53,8 +53,8 @@ ansible-playbook main.yaml --diff --limit role_core --inventory inventory/aws_ec
 
 Once the playbook is complete it might take a little bit until the HTTPS certificates are provisioned.
 
-# 6. Install Connect iT video and thumb appliances
+# 6. Install appliances
 
 ```bash
-ansible-playbook main.yaml --diff --limit role_thumb,role_video --inventory inventory/aws_ec2.yml
+ansible-playbook main.yaml --diff --limit role_thumb,role_video,role_edgeconnect --inventory inventory/aws_ec2.yml
 ```
