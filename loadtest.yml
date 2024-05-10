@@ -1,0 +1,7 @@
+- name: Install video generator on Edge Connects
+  hosts: role_edgeconnect
+  vars:
+    ansible_user: ubuntu
+  roles:
+    - role: generator
+      become: yes

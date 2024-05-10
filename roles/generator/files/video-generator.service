@@ -1,0 +1,8 @@
+[Unit]
+Description=video test stream generator
+
+[Service]
+ExecStart=/usr/bin/ffmpeg -f lavfi -re -i "testsrc=duration=300000:size=1280x1080:rate=24" -pix_fmt yuv420p -c:v libx264 -preset ultrafast -x264-params "nal-hrd=cbr" -b:v 100M -minrate 100M -maxrate 100M -bufsize 30M -f mpegts "udp://224.0.0.44:4444?pkt_size=1316&localaddr=127.0.0.1"
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,8 @@
+- name: systemctl daemon-reload
+  systemd:
+    daemon_reload: true
+
+- name: systemctl restart video-generator.service
+  systemd:
+    name: video-generator.service
+    state: restarted

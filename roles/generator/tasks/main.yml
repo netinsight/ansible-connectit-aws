@@ -1,0 +1,17 @@
+- name: Install ffmpeg
+  apt:
+    name: ffmpeg
+
+- name: Install generator service file
+  copy:
+    src: video-generator.service
+    dest: /etc/systemd/system/
+  notify:
+    - systemctl daemon-reload
+    - systemctl restart video-generator.service
+
+- name: Enable and start video-generator
+  systemd_service:
+    name: video-generator.service
+    state: started
+    daemon_reload: true
