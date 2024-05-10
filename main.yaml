@@ -1,0 +1,37 @@
+- name: Setup EC2 instances
+  hosts: localhost
+  gather_facts: False
+  roles:
+    - role: cluster
+  vars_files:
+    - config.yml
+
+- name: Setup Connect iT core
+  hosts: role_core
+  vars:
+    ansible_user: ubuntu
+  roles:
+    - role: core
+      become: yes
+  vars_files:
+    - config.yml
+
+- name: Setup Connect iT video
+  hosts: role_video
+  vars:
+    ansible_user: ubuntu
+  roles:
+    - role: video
+      become: yes
+  vars_files:
+    - config.yml
+
+- name: Setup Connect iT thumb
+  hosts: role_thumb
+  vars:
+    ansible_user: ubuntu
+  roles:
+    - role: thumb
+      become: yes
+  vars_files:
+    - config.yml

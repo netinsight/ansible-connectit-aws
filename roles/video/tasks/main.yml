@@ -1,0 +1,5 @@
+- name: Install Connect iT video
+  ansible.builtin.command:
+    cmd: connectit install video --url "https://{{ connectit_domain }}" --name "{{ ansible_host }}"
+  environment:
+    PASSWORD: "{{ connectit_admin_password }}"

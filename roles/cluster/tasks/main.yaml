@@ -1,0 +1,120 @@
+- name: Create Connect iT VPC
+  amazon.aws.ec2_vpc_net:
+    name: connectit_vpc
+    region: "{{ region }}"
+    cidr_block: 10.10.0.0/16
+    tags: "{{ aws_tags }}"
+  register: connectit_vpc
+
+- name: Create Internet gateway
+  amazon.aws.ec2_vpc_igw:
+    vpc_id: "{{ connectit_vpc.vpc.id }}"
+    region: "{{ region }}"
+    state: present
+    tags: "{{ aws_tags }}"
+  register: igw
+
+- name: Create subnet for Connect iT
+  amazon.aws.ec2_vpc_subnet:
+    state: present
+    region: "{{ region }}"
+    vpc_id: "{{ connectit_vpc.vpc.id }}"
+    cidr: 10.10.10.0/24
+    tags: "{{ aws_tags | combine({ 'Name': 'Connect iT subnet' }) }}"
+  register: connectit_subnet
+
+- name: create custom route table
+  amazon.aws.ec2_vpc_route_table:
+    vpc_id: "{{ connectit_vpc.vpc.id }}"
+    region: "{{ region }}"
+    subnets:
+      - "{{ connectit_subnet.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id }}"
+    tags: "{{ aws_tags }}"
+
+- name: Create Connect iT security group
+  amazon.aws.ec2_security_group:
+    name: "connectit_sg"
+    description: Security group for EC2 instances used for load testing
+    region: "{{ region }}"
+    vpc_id: "{{ connectit_vpc.vpc.id }}"
+    tags: "{{ aws_tags }}"
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all ssh
+      - proto: tcp
+        ports:
+          - 80
+          - 443
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow http/https
+      - proto: udp
+        ports:
+          - 20000-20100
+        cidr_ip: 0.0.0.0/0
+        rule_desc: RIST tunnels
+  register: connectit_sg
+
+- name: Upload ssh key 
+  amazon.aws.ec2_key:
+    region: "{{ region }}"
+    name: "connectit-{{ lookup('env', 'USER') }}"
+    key_material: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+    tags: "{{ aws_tags }}"
+
+- name: ami facts
+  amazon.aws.ec2_ami_info:
+    region: "{{ region }}"
+    image_ids: ami-0705384c0b33c194c # ubuntu 24.04
+  register: ami_facts
+
+- name: start an instance for Connect-iT Core
+  amazon.aws.ec2_instance:
+    name: "connectit-core"
+    region: "{{ region }}"
+    key_name: "connectit-{{ lookup('env', 'USER') }}"
+    vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
+    instance_type: "{{ core_instance_type }}"
+    security_group: connectit_sg
+    network:
+      assign_public_ip: true
+    image_id: "{{ ami_facts.images[0].image_id }}"
+    volumes:
+      - device_name: "{{ ami_facts.images[0].block_device_mappings[0].device_name }}"
+        ebs:
+          volume_size: "{{ core_volume_size }}"
+          delete_on_termination: true
+    tags: "{{ aws_tags | combine({ 'role': 'core' }) }}"
+
+- name: start video instances
+  amazon.aws.ec2_instance:
+    name: "connectit-video"
+    region: "{{ region }}"
+    key_name: "connectit-{{ lookup('env', 'USER') }}"
+    vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
+    instance_type: "{{ video_instance_type }}"
+    security_group: connectit_sg
+    network:
+      assign_public_ip: true
+    image_id: ami-0705384c0b33c194c # ubuntu 24.04
+    exact_count: 1
+    tags: "{{ aws_tags | combine({ 'role': 'video' }) }}"
+
+- name: start thumb instances
+  amazon.aws.ec2_instance:
+    name: "connectit-thumb"
+    region: "{{ region }}"
+    key_name: "connectit-{{ lookup('env', 'USER') }}"
+    vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
+    instance_type: "{{ thumb_instance_type }}"
+    security_group: connectit_sg
+    network:
+      assign_public_ip: true
+    image_id: ami-0705384c0b33c194c # ubuntu 24.04
+    exact_count: 1
+    tags: "{{ aws_tags | combine({ 'role': 'thumb' }) }}"

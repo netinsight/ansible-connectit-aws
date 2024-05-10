@@ -1,0 +1,7 @@
+core_instance_type: m7a.xlarge
+video_instance_type: c7a.xlarge
+thumb_instance_type: c7a.xlarge
+# the password needs to be at least 8 characters
+connectit_admin_password: hunter2
+connectit_license: 9f128dc2-0eae-11ef-ad08-53e83941b2eb
+connectit_domain: example.cnctit.io

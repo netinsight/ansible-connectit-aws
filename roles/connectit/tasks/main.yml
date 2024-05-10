@@ -1,0 +1,5 @@
+- name: Download Connect iT binary
+  ansible.builtin.get_url:
+    url: "https://docs.cnctit.io/releases/connectit-{{ connectit_version }}"
+    dest: /usr/sbin/connectit
+    mode: 'u=rwx,g=rx,o=rx'

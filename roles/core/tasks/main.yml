@@ -1,0 +1,6 @@
+- name: Install Connect iT core
+  ansible.builtin.command:
+    cmd: connectit install core
+  environment:
+    ADMIN_PASSWORD: "{{ connectit_admin_password }}"
+    LICENSE: "{{ connectit_license }}"
