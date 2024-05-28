@@ -1,6 +1,6 @@
 - name: Install Connect iT core
   ansible.builtin.command:
-    cmd: connectit install core
+    cmd: "connectit install core {% if connectit_version is version('R3.20', '>=') %}--force{% endif %}"
   environment:
     ADMIN_PASSWORD: "{{ connectit_admin_password }}"
     LICENSE: "{{ connectit_license }}"

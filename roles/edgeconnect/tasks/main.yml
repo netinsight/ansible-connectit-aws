@@ -1,5 +1,5 @@
 - name: Install Edge Connect
   ansible.builtin.command:
-    cmd: connectit install edge-connect --url "https://{{ connectit_domain }}" --name "{{ edgeconnect_name }}"
+    cmd: "connectit install edge-connect --url 'https://{{ connectit_domain }}' --name '{{ edgeconnect_name }}' {% if connectit_version is version('R3.20', '>=') %}--force{% endif %}"
   environment:
     PASSWORD: "{{ connectit_admin_password }}"

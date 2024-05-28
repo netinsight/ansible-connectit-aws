@@ -1,5 +1,5 @@
 - name: Install Connect iT thumb
   ansible.builtin.command:
-    cmd: connectit install thumb --url "https://{{ connectit_domain }}" --name "{{ ansible_host }}"
+    cmd: "connectit install thumb --url 'https://{{ connectit_domain }}' --name '{{ ansible_host }}' {% if connectit_version is version('R3.20', '>=') %}--force{% endif %}"
   environment:
     PASSWORD: "{{ connectit_admin_password }}"
