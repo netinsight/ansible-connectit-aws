@@ -34,10 +34,10 @@
         gateway_id: "{{ igw.gateway_id }}"
     tags: "{{ aws_tags }}"
 
-- name: Create Connect iT security group
+- name: Create Connect iT security group - core
   amazon.aws.ec2_security_group:
-    name: "connectit_sg"
-    description: Security group for EC2 instances used for load testing
+    name: "connectit_sg_core"
+    description: Security group for Connect iT core
     region: "{{ region }}"
     vpc_id: "{{ connectit_vpc.vpc.id }}"
     tags: "{{ aws_tags }}"
@@ -53,12 +53,57 @@
           - 443
         cidr_ip: 0.0.0.0/0
         rule_desc: allow http/https
+  register: connectit_sg_core
+
+- name: Create Connect iT security group - video
+  amazon.aws.ec2_security_group:
+    name: "connectit_sg_video"
+    description: Security group for Connect iT video instances
+    region: "{{ region }}"
+    vpc_id: "{{ connectit_vpc.vpc.id }}"
+    tags: "{{ aws_tags }}"
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all ssh
       - proto: udp
         ports:
           - 20000-20100
         cidr_ip: 0.0.0.0/0
         rule_desc: RIST tunnels
-  register: connectit_sg
+      - proto: udp
+        ports:
+          - 10000-20000
+        cidr_ip: 0.0.0.0/0
+        rule_desc: Stream traffic
+  register: connectit_sg_video
+
+- name: Create Connect iT security group - thumb
+  amazon.aws.ec2_security_group:
+    name: "connectit_sg_thumb"
+    description: Security group for Connect iT thumb instances
+    region: "{{ region }}"
+    vpc_id: "{{ connectit_vpc.vpc.id }}"
+    tags: "{{ aws_tags }}"
+    rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow all ssh
+      - proto: tcp
+        ports:
+          - 80
+        cidr_ip: 0.0.0.0/0
+        rule_desc: allow http for thumbnails
+      - proto: udp
+        ports:
+          - 20000-20100
+        cidr_ip: 0.0.0.0/0
+        rule_desc: RIST tunnels
+  register: connectit_sg_thumb
 
 - name: Upload ssh key 
   amazon.aws.ec2_key:
@@ -80,7 +125,7 @@
     key_name: "connectit-{{ lookup('env', 'USER') }}"
     vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
     instance_type: "{{ core_instance_type }}"
-    security_group: connectit_sg
+    security_group: connectit_sg_core
     network:
       assign_public_ip: true
     image_id: "{{ ami_facts.images[0].image_id }}"
@@ -98,7 +143,7 @@
     key_name: "connectit-{{ lookup('env', 'USER') }}"
     vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
     instance_type: "{{ video_instance_type }}"
-    security_group: connectit_sg
+    security_group: connectit_sg_video
     network:
       assign_public_ip: true
     image_id: ami-0705384c0b33c194c # ubuntu 24.04
@@ -112,7 +157,7 @@
     key_name: "connectit-{{ lookup('env', 'USER') }}"
     vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
     instance_type: "{{ thumb_instance_type }}"
-    security_group: connectit_sg
+    security_group: connectit_sg_thumb
     network:
       assign_public_ip: true
     image_id: ami-0705384c0b33c194c # ubuntu 24.04
@@ -126,7 +171,7 @@
     key_name: "connectit-{{ lookup('env', 'USER') }}"
     vpc_subnet_id: "{{ connectit_subnet.subnet.id }}"
     instance_type: "{{ edgeconnect_instance_type }}"
-    security_group: connectit_sg
+    security_group: connectit_sg_video
     network:
       assign_public_ip: true
     image_id: ami-0705384c0b33c194c # ubuntu 24.04
