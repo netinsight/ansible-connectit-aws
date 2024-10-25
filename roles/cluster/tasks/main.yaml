@@ -112,11 +112,16 @@
     key_material: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
     tags: "{{ aws_tags }}"
 
-- name: ami facts
-  amazon.aws.ec2_ami_info:
+- name: Find latest AWS AMI för Ubuntu 24.04
+  ec2_ami_info:
     region: "{{ region }}"
-    image_ids: ami-0705384c0b33c194c # ubuntu 24.04
+    owners: 099720109477 # amazon
+    filters:
+      name: "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
   register: ami_facts
+
+- set_fact:
+    ami_image: "{{ ami_facts.images[-1] }}"
 
 - name: start an instance for Connect-iT Core
   amazon.aws.ec2_instance:
@@ -128,9 +133,9 @@
     security_group: connectit_sg_core
     network:
       assign_public_ip: true
-    image_id: "{{ ami_facts.images[0].image_id }}"
+    image_id: "{{ ami_image.image_id }}"
     volumes:
-      - device_name: "{{ ami_facts.images[0].block_device_mappings[0].device_name }}"
+      - device_name: "{{ ami_image.block_device_mappings[0].device_name }}"
         ebs:
           volume_size: "{{ core_volume_size }}"
           delete_on_termination: true
@@ -146,7 +151,7 @@
     security_group: connectit_sg_video
     network:
       assign_public_ip: true
-    image_id: ami-0705384c0b33c194c # ubuntu 24.04
+    image_id: "{{ ami_image.image_id }}"
     exact_count: 1
     tags: "{{ aws_tags | combine({ 'role': 'video' }) }}"
 
@@ -160,7 +165,7 @@
     security_group: connectit_sg_thumb
     network:
       assign_public_ip: true
-    image_id: ami-0705384c0b33c194c # ubuntu 24.04
+    image_id: "{{ ami_image.image_id }}"
     exact_count: 1
     tags: "{{ aws_tags | combine({ 'role': 'thumb' }) }}"
 
@@ -174,7 +179,7 @@
     security_group: connectit_sg_video
     network:
       assign_public_ip: true
-    image_id: ami-0705384c0b33c194c # ubuntu 24.04
+    image_id: "{{ ami_image.image_id }}"
     exact_count: "{{ edgeconnect_count }}"
     tags: "{{ aws_tags | combine({ 'role': 'edgeconnect' }) }}"
   when: edgeconnect_count  > 0
