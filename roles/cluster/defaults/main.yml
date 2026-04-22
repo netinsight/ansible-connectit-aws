@@ -5,7 +5,7 @@ video_instance_type: c7a.xlarge
 thumb_instance_type: "{{ video_instance_type }}"
 edgeconnect_instance_type: c7a.xlarge
 video_count: 1
-thumb_count: 1
+thumb_count: 0
 edgeconnect_count: 0
 aws_tags:
   application: connectit
