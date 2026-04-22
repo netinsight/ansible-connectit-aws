@@ -1,3 +1,4 @@
+region: eu-north-1
 core_instance_type: m7a.xlarge
 video_instance_type: c7a.xlarge
 thumb_instance_type: c7a.xlarge

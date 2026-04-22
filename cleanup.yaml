@@ -6,12 +6,8 @@
   hosts: localhost
   gather_facts: False
   vars_files:
+    - roles/cluster/defaults/main.yml
     - config.yml
-  vars:
-    region: eu-north-1
-    aws_tags:
-      application: connectit
-      managed-by: ansible
   tasks:
     - name: "WARNING: This will DELETE all Connect iT AWS resources. Continue?"
       ansible.builtin.pause:
