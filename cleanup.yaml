@@ -1,0 +1,122 @@
+# WARNING: This playbook will permanently DELETE ALL AWS resources managed by
+# this repository, including EC2 instances, security groups, subnets, and the
+# VPC. This action is irreversible. All data on the instances will be lost.
+
+- name: Clean up all Connect iT AWS resources
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+    - config.yml
+  vars:
+    region: eu-north-1
+    aws_tags:
+      application: connectit
+      managed-by: ansible
+  tasks:
+    - name: "WARNING: This will DELETE all Connect iT AWS resources. Continue?"
+      ansible.builtin.pause:
+        prompt: "Type 'yes' to confirm deletion of ALL Connect iT resources (instances, VPC, security groups, etc.)"
+      register: confirm
+
+    - name: Abort if not confirmed
+      ansible.builtin.fail:
+        msg: "Cleanup aborted by user."
+      when: confirm.user_input != "yes"
+
+    - name: Look up Connect iT VPC
+      amazon.aws.ec2_vpc_net_info:
+        region: "{{ region }}"
+        filters:
+          "tag:Name": connectit_vpc
+      register: vpc_info
+
+    - name: Set VPC ID
+      set_fact:
+        vpc_id: "{{ vpc_info.vpcs[0].id }}"
+      when: vpc_info.vpcs | length > 0
+
+    - name: Terminate all instances
+      amazon.aws.ec2_instance:
+        region: "{{ region }}"
+        state: absent
+        wait: true
+        filters:
+          "tag:Name": "{{ item }}"
+          "tag:application": connectit
+      loop:
+        - edge-connect
+        - connectit-thumb
+        - connectit-video
+        - connectit-core
+      async: 300
+      poll: 0
+      register: terminate_jobs
+
+    - name: Wait for all instances to terminate
+      ansible.builtin.async_status:
+        jid: "{{ item.ansible_job_id }}"
+      loop: "{{ terminate_jobs.results }}"
+      register: terminate_results
+      until: terminate_results is finished
+      retries: 60
+      delay: 5
+
+    - name: Remove SSH key pair
+      amazon.aws.ec2_key:
+        region: "{{ region }}"
+        name: "connectit-{{ lookup('env', 'USER') }}"
+        state: absent
+
+    - name: Remove security groups
+      amazon.aws.ec2_security_group:
+        region: "{{ region }}"
+        name: connectit_sg_core
+        vpc_id: "{{ vpc_id }}"
+        state: absent
+      loop:
+        - connectit_sg_core
+        - connectit_sg_video
+        - connectit_sg_thumb
+      when: vpc_id is defined
+
+    - name: Find route tables in VPC
+      amazon.aws.ec2_vpc_route_table_info:
+        region: "{{ region }}"
+        filters:
+          vpc-id: "{{ vpc_id }}"
+          "tag:application": connectit
+      register: route_tables
+      when: vpc_id is defined
+
+    - name: Remove route tables
+      amazon.aws.ec2_vpc_route_table:
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        route_table_id: "{{ item.id }}"
+        lookup: id
+        state: absent
+      loop: "{{ route_tables.route_tables }}"
+      when: vpc_id is defined
+
+    - name: Remove internet gateway
+      amazon.aws.ec2_vpc_igw:
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        state: absent
+      when: vpc_id is defined
+
+    - name: Remove subnet
+      amazon.aws.ec2_vpc_subnet:
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        cidr: 10.10.10.0/24
+        state: absent
+      when: vpc_id is defined
+
+    - name: Remove VPC
+      amazon.aws.ec2_vpc_net:
+        name: connectit_vpc
+        region: "{{ region }}"
+        cidr_block: 10.10.0.0/16
+        state: absent
+      when: vpc_id is defined
