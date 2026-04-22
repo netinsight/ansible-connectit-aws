@@ -152,7 +152,7 @@
     network:
       assign_public_ip: true
     image_id: "{{ ami_image.image_id }}"
-    exact_count: 1
+    exact_count: "{{ video_count }}"
     tags: "{{ aws_tags | combine({ 'role': 'video' }) }}"
 
 - name: start thumb instances
@@ -166,7 +166,7 @@
     network:
       assign_public_ip: true
     image_id: "{{ ami_image.image_id }}"
-    exact_count: 1
+    exact_count: "{{ thumb_count }}"
     tags: "{{ aws_tags | combine({ 'role': 'thumb' }) }}"
 
 - name: start edge connect instances

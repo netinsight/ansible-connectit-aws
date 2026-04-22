@@ -6,4 +6,6 @@ edgeconnect_instance_type: c7a.xlarge
 connectit_admin_password: hunter2
 connectit_license: 9f128dc2-0eae-11ef-ad08-53e83941b2eb
 connectit_domain: example.cnctit.io
+video_count: 1
+thumb_count: 1
 edgeconnect_count: 0
