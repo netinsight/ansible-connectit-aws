@@ -1,11 +1,11 @@
 - name: Install ffmpeg
-  apt:
+  ansible.builtin.apt:
     name: ffmpeg
     update_cache: yes
     cache_valid_time: 3600
 
 - name: Install generator service file
-  copy:
+  ansible.builtin.copy:
     src: video-generator.service
     dest: /etc/systemd/system/
   notify:
@@ -13,7 +13,7 @@
     - systemctl restart video-generator.service
 
 - name: Enable and start video-generator
-  systemd_service:
+  ansible.builtin.systemd_service:
     name: video-generator.service
     state: started
     daemon_reload: true

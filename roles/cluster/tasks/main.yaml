@@ -113,14 +113,15 @@
     tags: "{{ aws_tags }}"
 
 - name: Find latest AWS AMI för Ubuntu 24.04
-  ec2_ami_info:
+  amazon.aws.ec2_ami_info:
     region: "{{ region }}"
     owners: 099720109477 # amazon
     filters:
       name: "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
   register: ami_facts
 
-- set_fact:
+- name: Select latest AMI
+  ansible.builtin.set_fact:
     ami_image: "{{ ami_facts.images[-1] }}"
 
 - name: start an instance for Connect-iT Core

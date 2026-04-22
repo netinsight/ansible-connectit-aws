@@ -1,8 +1,8 @@
 - name: systemctl daemon-reload
-  systemd:
+  ansible.builtin.systemd_service:
     daemon_reload: true
 
 - name: systemctl restart video-generator.service
-  systemd:
+  ansible.builtin.systemd_service:
     name: video-generator.service
     state: restarted
