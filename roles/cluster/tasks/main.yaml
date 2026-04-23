@@ -154,6 +154,7 @@
     image_id: "{{ ami_image.image_id }}"
     exact_count: "{{ video_count }}"
     tags: "{{ aws_tags | combine({ 'role': 'video' }) }}"
+  when: video_count > 0
 
 - name: start thumb instances
   amazon.aws.ec2_instance:
@@ -168,6 +169,7 @@
     image_id: "{{ ami_image.image_id }}"
     exact_count: "{{ thumb_count }}"
     tags: "{{ aws_tags | combine({ 'role': 'thumb' }) }}"
+  when: thumb_count > 0
 
 - name: start edge connect instances
   amazon.aws.ec2_instance:
