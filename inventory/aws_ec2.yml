@@ -4,5 +4,5 @@ regions:
 filters:
   tag:application: connectit
 keyed_groups:
-  - key: tags['role']
+  - key: ec2_tags['role']
     prefix: role
