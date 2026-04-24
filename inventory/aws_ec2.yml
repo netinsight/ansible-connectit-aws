@@ -1,6 +1,7 @@
 plugin: amazon.aws.aws_ec2
 regions:
   - eu-north-1
+hostvars_prefix: ec2_
 filters:
   tag:application: connectit
 keyed_groups:
